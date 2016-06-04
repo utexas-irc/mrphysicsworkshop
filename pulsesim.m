@@ -20,7 +20,9 @@ function M = pulsesim(B1, t, Foff, pulseshape, animate)
 %             sinc7 = 7-lobe sinc (three signle-sided zero crossings)
 %             gauss = Gaussian truncated at typical 0.01% max amplitude
 %
-%animate    = 0 to simply show the final result; 1 = animate the demo.
+%animate    =  0 => simply show the final result 
+%              1 => animate the demo
+%             -1 => plot nothing, only retun magetization vectors
 %
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -32,6 +34,7 @@ tVec = tInc:tInc:t;
 offResInc = Foff*2*pi*tInc;
 M = zeros(3,numel(tVec));
 M(3,1) = 1;
+animStep = numel(tVec)/1000;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set up the RF pulse shape and incremental flips %
@@ -84,7 +87,9 @@ end
 %%%%%%%%%%%%%%%%%%%%
 % Plot the results %
 %%%%%%%%%%%%%%%%%%%%
-
+if((animate ~= 1) && (animate ~= 0))
+    return;
+end
 magPlot = figure;
 [sx, sy, sz] = sphere(100);
 objHand = surf(sx, sy, sz);
@@ -98,10 +103,11 @@ plot3([0 0], [0 0], [1 -1], 'Marker', '.', 'MarkerSize', 15, 'Color', [0 0 1]);
 set(gca, 'XLim', [-1 1], 'YLim', [-1,1], 'ZLim', [-1 1]);
 set(gca, 'CameraPosition', [9.4318 7.1850 12.6261]);
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Animate for the demo if requested %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if(animate)
+if(animate == 1)
     %animate final result
     aPlot = plot3(M(1,1), M(2,1), M(3,1), 'Linewidth', 3);
     pPlot = plot3(M(1,1), M(2,1), M(3,1), 'Marker', '.', 'MarkerSize', 15, 'Color', [0.8 0 0]);
@@ -127,7 +133,7 @@ if(animate)
     title('Z-Magnetization', 'FontSize', 16, 'FontWeight', 'Bold');
     set(gca, 'XLim', [0 t],'YLim', [-1 1]);
     drawnow;   
-    for ii = 2:15:numel(tVec)
+    for ii = 2:animStep:numel(tVec)
         %figure(magPlot);
         set(aPlot, 'XData',M(1,1:ii),'YData', M(2,1:ii),'ZData', M(3,1:ii));
         set(pPlot, 'XData',M(1,ii),'YData', M(2,ii),'ZData', M(3,ii));
@@ -138,35 +144,45 @@ if(animate)
         drawnow;
     end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
-% Otherwise, just plot the final result %
+% Or, just plot the final result %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 else
     plot3(M(1,:), M(2,:), M(3,:), 'Linewidth', 3);
+    movegui('west');
     figure;
     subplot(1,3,1);
     plot(tVec, M(1,:), 'LineWidth', 2.5);
     xlabel('Time (s)', 'FontSize', 14);
     title('X-Magnetization', 'FontSize', 16, 'FontWeight', 'Bold');
-    set(gca, 'YLim', [-1 1]);
+    set(gca, 'XLim', [0 t],'YLim', [-1 1]);
     subplot(1,3,2);
     plot(tVec, M(2,:), 'LineWidth', 2.5);
     xlabel('Time (s)', 'FontSize', 14);
     title('Y-Magnetization', 'FontSize', 16, 'FontWeight', 'Bold');
-    set(gca, 'YLim', [-1 1]);
+    set(gca, 'XLim', [0 t],'YLim', [-1 1]);
     subplot(1,3,3);
     plot(tVec, M(3,:), 'LineWidth', 2.5);
     xlabel('Time (s)', 'FontSize', 14);
     title('Z-Magnetization', 'FontSize', 16, 'FontWeight', 'Bold');
-    set(gca, 'YLim', [-1 1]);
+    set(gca, 'XLim', [0 t],'YLim', [-1 1]);
+    pos = get(gcf, 'Position');
+    set(gcf, 'Position', [pos(1) pos(2) 900 pos(4)]);
+    movegui('east');
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Otherwise, don't plot anything %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Report the final flip angle and phase %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-figure(magPlot);
-theta = sprintf( '%0.2f', (atan2(norm(cross([0 0 1],M(:,end))),dot([0 0 1],M(:,end))))*180/pi);
-phi = sprintf( '%0.2f', (atan2(norm(cross([0 1 0],M(:,end))),dot([0 1 0],M(:,end))))*180/pi);
-title(['Final \theta = ' theta '\circ, Final \phi = ' phi '\circ'], 'FontSize', 16, 'FontWeight', 'Bold');
+if ~isempty(findobj(magPlot))
+    figure(magPlot);
+    theta = sprintf( '%0.2f', (atan2(norm(cross([0 0 1],M(:,end))),dot([0 0 1],M(:,end))))*180/pi);
+    phiVec = [M(1,end) M(2,end) 0];
+    phi = sprintf( '%0.2f', (atan2(norm(cross([0 1 0],phiVec)),dot([0 1 0],phiVec)))*180/pi);
+    title(['Final \theta = ' theta '\circ, Final \phi = ' phi '\circ'], 'FontSize', 16, 'FontWeight', 'Bold');
+end
 
 
 
