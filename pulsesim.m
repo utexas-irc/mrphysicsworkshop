@@ -1,4 +1,4 @@
-function M = pulsesim(B1, t, Foff, pulseshape, animate)
+function [M, theta, phi] = pulsesim(B1, t, Foff, pulseshape, animate)
 %PULSESIM Simulate off-resonant RF Pulses
 %
 %M = pulsesim(B1, t, Foff, pulseshape, animate)
@@ -83,6 +83,10 @@ switch(pulseshape)
     otherwise
         disp('Pulse shape not recognized');
 end
+
+theta = sprintf( '%0.2f', (atan2(norm(cross([0 0 1],M(:,end))),dot([0 0 1],M(:,end))))*180/pi);
+phiVec = [M(1,end) M(2,end) 0];
+phi = sprintf( '%0.2f', (atan2(norm(cross([0 1 0],phiVec)),dot([0 1 0],phiVec)))*180/pi);
 
 %%%%%%%%%%%%%%%%%%%%
 % Plot the results %
@@ -178,9 +182,6 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(findobj(magPlot))
     figure(magPlot);
-    theta = sprintf( '%0.2f', (atan2(norm(cross([0 0 1],M(:,end))),dot([0 0 1],M(:,end))))*180/pi);
-    phiVec = [M(1,end) M(2,end) 0];
-    phi = sprintf( '%0.2f', (atan2(norm(cross([0 1 0],phiVec)),dot([0 1 0],phiVec)))*180/pi);
     title(['Final \theta = ' theta '\circ, Final \phi = ' phi '\circ'], 'FontSize', 16, 'FontWeight', 'Bold');
 end
 
