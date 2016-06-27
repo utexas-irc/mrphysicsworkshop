@@ -75,9 +75,15 @@ else
         x(xOver) = size(field,2)-(x(xOver)-size(field,2));
         yOver = find(y>size(field,1));
         y(yOver) = size(field,1)-(y(yOver)-size(field,1));
-        for jj = 1:numel(phi)
-            phi(jj) = phi(jj) + gamma*field(x(jj),y(jj))*tStep;
-        end
+    
+        %precompute the product for the whole field matrix
+        fieldprod = gamma * field * tStep;
+        %flatten the above matrix into an array by reversing the 
+        %ind2sub call from the start of this loop
+        flatfieldprod = fieldprod(sub2ind(size(fieldprod),x,y));
+        %auto-parrellize the addition of the phi and field product
+        phi = bsxfun(@plus, phi, flatfieldprod);
+        
         [vx,vy] = pol2cart(phi,ones(1,numel(phi)));
         signal(ii) = abs(sum(vx) + 1i*sum(vy));
     end
